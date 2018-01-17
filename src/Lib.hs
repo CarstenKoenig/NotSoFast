@@ -19,13 +19,17 @@ import Data.Aeson.TH
 import Data.Swagger
 import Data.Text (Text, pack)
 import GHC.Generics
+import Lucid (Html, toHtmlRaw)
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.WebSockets (ConnectionException)
 import Network.WebSockets.Connection (Connection, sendTextData, sendClose, forkPingThread, receiveDataMessage )
 import Servant
 import Servant.API.WebSocket
+import Servant.HTML.Lucid (HTML)
 import Servant.Swagger
+import qualified Data.ByteString as BS
+
 
 data User = User
   { userId        :: Int
@@ -35,7 +39,8 @@ data User = User
 
 $(deriveJSON defaultOptions ''User)
 
-type API = SwaggerApi :<|> UserApi :<|> WebSocketApi
+type API = SwaggerApi :<|> UserApi :<|> WebSocketApi :<|> HtmlApi :<|> StaticApi
+
 
 startApp :: IO ()
 startApp = run 8080 app
@@ -47,7 +52,7 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = swaggerHandler :<|> userHandler :<|> streamData
+server = swaggerHandler :<|> userHandler :<|> streamData :<|> serveRoot :<|> serveStaticFiles
 
 
 type UserApi = "users" :> Get '[JSON] [User]
@@ -77,6 +82,19 @@ streamData c = do
     closed _ = liftIO $ putStrLn "socket went away :'("
     panic :: SomeException -> m ()
     panic _ = liftIO $ putStrLn "something went wrong"
+
+
+type HtmlApi = Get '[HTML] (Html ())
+
+serveRoot :: Handler (Html ())
+serveRoot = liftIO $ do
+  index <- BS.readFile "dist/index.html"
+  return $ toHtmlRaw index
+
+
+type StaticApi = Raw
+
+serveStaticFiles = serveDirectoryWebApp "dist"
 
 
 type SwaggerApi = "swagger.json" :> Get '[JSON] Swagger

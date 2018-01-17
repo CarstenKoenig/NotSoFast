@@ -18,8 +18,11 @@ library
   exposed-modules:     Lib
   build-depends:       base >= 4.7 && < 5
                      , aeson
+                     , bytestring
                      , exceptions
                      , lens
+                     , lucid
+                     , servant-lucid
                      , servant-server
                      , servant-swagger
                      , servant-websockets
