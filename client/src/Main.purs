@@ -42,11 +42,14 @@ myButton =
     let
       label = if state then "On" else "Off"
     in
-      HH.button
-        [ HP.title label
-        , HE.onClick (HE.input_ Toggle)
-        ]
-        [ HH.text label ]
+      HH.div_
+      [ HH.h1_ [ HH.text "push it" ]
+      , HH.button
+          [ HP.title label
+          , HE.onClick (HE.input_ Toggle)
+          ]
+          [ HH.text label ]
+      ]
 
   eval :: Query ~> H.ComponentDSL State Query Message m
   eval = case _ of
